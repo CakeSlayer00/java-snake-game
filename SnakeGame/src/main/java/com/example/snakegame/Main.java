@@ -20,13 +20,13 @@ public class Main extends Application {
     final int GAME_UNITS = (WIDTH * HEIGHT) / UNIT_SIZE;
     final int[] x = new int[GAME_UNITS];
     final int[] y = new int[GAME_UNITS];
-    int delay = 100;
+    int delay = 75;
     int bodyParts = 4;
     int score;
     int appleX;
     int appleY;
     boolean isRunning = false;
-    Direction currentDirection = Direction.RIGHT;
+    Direction direction = Direction.RIGHT;
     Random random;
     AnimationTimer timer;
 
@@ -77,23 +77,23 @@ public class Main extends Application {
         scene.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
             switch (keyEvent.getCode()) {
                 case W:
-                    if (currentDirection != Direction.DOWN) {
-                        currentDirection = Direction.UP;
+                    if (direction != Direction.DOWN) {
+                        direction = Direction.UP;
                     }
                     break;
                 case A:
-                    if (currentDirection != Direction.RIGHT) {
-                        currentDirection = Direction.LEFT;
+                    if (direction != Direction.RIGHT) {
+                        direction = Direction.LEFT;
                     }
                     break;
                 case S:
-                    if (currentDirection != Direction.UP) {
-                        currentDirection = Direction.DOWN;
+                    if (direction != Direction.UP) {
+                        direction = Direction.DOWN;
                     }
                     break;
                 case D:
-                    if (currentDirection != Direction.LEFT) {
-                        currentDirection = Direction.RIGHT;
+                    if (direction != Direction.LEFT) {
+                        direction = Direction.RIGHT;
                     }
                     break;
             }
@@ -106,7 +106,7 @@ public class Main extends Application {
             y[i] = y[i - 1];
         }
 
-        switch (currentDirection) {
+        switch (direction) {
             case UP:
                 y[0] = y[0] - UNIT_SIZE;
                 break;
@@ -138,8 +138,20 @@ public class Main extends Application {
             }
         }
 
-        if (x[0] < 0 || y[0] < 0 || x[0] >= WIDTH || y[0] >= HEIGHT) {
-            isRunning = false;
+        if(x[0] < 0) {
+            x[0] = WIDTH;
+        }
+
+        if(y[0] < 0){
+            y[0] = HEIGHT;
+        }
+
+        if(x[0] > WIDTH) {
+            x[0] = 0;
+        }
+
+        if(y[0] > HEIGHT) {
+            y[0] = 0;
         }
 
         if (!isRunning) {
@@ -158,7 +170,6 @@ public class Main extends Application {
             drawApple(gc);
             drawSnake(gc);
             drawScore(gc);
-            drawDelay(gc);
         } else {
             drawGameOverMenu(gc);
         }
@@ -188,11 +199,11 @@ public class Main extends Application {
     private void drawSnake(GraphicsContext gc) {
         for (int i = 0; i < bodyParts; i++) {
             if (i == 0) {
-                gc.setFill(Color.GREEN);
+                gc.setFill(Color.rgb(147 , 112 , 219));
             } else {
-                gc.setFill(Color.DARKGREEN);
+                gc.setFill(Color.rgb(138 , 43 ,226));
             }
-            gc.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
+            gc.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE );
         }
     }
 
