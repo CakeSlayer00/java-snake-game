@@ -15,8 +15,8 @@ import javafx.stage.Stage;
 import java.util.Random;
 
 public class Main extends Application {
-    final int WIDTH = 600;
-    final int HEIGHT = 600;
+    int WIDTH = 600;
+    int HEIGHT = 600;
     final int UNIT_SIZE = 25;
     final int GAME_UNITS = (WIDTH * HEIGHT) / UNIT_SIZE;
     int[] x = new int[GAME_UNITS];
@@ -29,7 +29,7 @@ public class Main extends Application {
     int appleY;
     boolean isRunning = false;
     Direction direction = Direction.RIGHT;
-    Random random;
+    Random random = new Random();
     AnimationTimer timer;
 
     public static void main(String[] args) {
@@ -38,7 +38,6 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) {
-        random = new Random();
         newApple();
         isRunning = true;
 
@@ -61,7 +60,6 @@ public class Main extends Application {
                     checkForApple();
                     move();
                     intersects();
-                    changeDelay();
                     draw(gc, button);
                     lastUpdate = now;
                 }
@@ -74,12 +72,6 @@ public class Main extends Application {
         stage.setTitle("Snake");
         stage.setScene(scene);
         stage.show();
-    }
-
-    private void changeDelay() {
-        if(score == 5) {
-            delay -= 5;
-        }
     }
 
     private void update(Scene scene) {
@@ -164,11 +156,9 @@ public class Main extends Application {
 
     private void draw(GraphicsContext gc, Button button) {
         if (isRunning) {
-            drawGrid(gc);
             drawApple(gc);
             drawSnake(gc);
             drawScore(gc);
-            drawDelay(gc);
         } else {
             drawGameOverMenu(gc, button);
         }
@@ -196,11 +186,18 @@ public class Main extends Application {
     }
 
     private void drawSnake(GraphicsContext gc) {
+        Color rainbow = Color.rgb(random.nextInt(255), random.nextInt(255), random.nextInt(255));
+
         for (int i = 0; i < bodyParts; i++) {
             if (i == 0) {
                 gc.setFill(Color.rgb(147, 112, 219));
             } else {
-                gc.setFill(Color.rgb(138, 43, 226));
+                if (score % 2 == 0) {
+                    gc.setFill(Color.rgb(138, 43, 226));
+                } else {
+                    gc.setFill(rainbow);
+                }
+
             }
             gc.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
         }
@@ -212,14 +209,15 @@ public class Main extends Application {
     }
 
     private void drawGameOverMenu(GraphicsContext gc, Button button) {
-        highScore = score;
+        highScore = Math.max(highScore, score);
 
         gc.setFill(Color.rgb(253, 103, 58));
         gc.setFont(Font.font("ArcadeClassic", 100));
         gc.fillText("Game Over", 75, (double) HEIGHT / 2);
 
-        gc.setFont(Font.font("ArcadeClassic" , 50));
-        gc.fillText("HIGH SCORE: " + highScore , 160, (double) HEIGHT / 2 + 30);
+        gc.setFill(Color.rgb(202, 52, 51));
+        gc.setFont(Font.font("ArcadeClassic", 50));
+        gc.fillText("HIGH SCORE: " + highScore, 160, (double) HEIGHT / 2 + 30);
 
         callRestartButton(button);
     }
@@ -248,9 +246,9 @@ public class Main extends Application {
     private void setUpButton(Button button) {
         button.setVisible(true);
         button.setLayoutX(180);
-        button.setLayoutY((double) HEIGHT / 2+ 7);
+        button.setLayoutY((double) HEIGHT / 2 + 7);
         button.setText("RESTART");
         button.setStyle("-fx-background-color: rgba(0 , 0 , 0 ,0 ); -fx-text-fill: rgb(223, 255, 0);");
-        button.setFont(Font.font("ArcadeClassic" , 50));
+        button.setFont(Font.font("ArcadeClassic", 50));
     }
 }
