@@ -6,6 +6,7 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -18,11 +19,12 @@ public class Main extends Application {
     final int HEIGHT = 600;
     final int UNIT_SIZE = 25;
     final int GAME_UNITS = (WIDTH * HEIGHT) / UNIT_SIZE;
-    final int[] x = new int[GAME_UNITS];
-    final int[] y = new int[GAME_UNITS];
+    int[] x = new int[GAME_UNITS];
+    int[] y = new int[GAME_UNITS];
     int delay = 75;
     int bodyParts = 4;
     int score;
+    int highScore;
     int appleX;
     int appleY;
     boolean isRunning = false;
@@ -36,15 +38,18 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) {
-
         random = new Random();
         newApple();
         isRunning = true;
 
         Canvas canvas = new Canvas(WIDTH, HEIGHT);
         GraphicsContext gc = canvas.getGraphicsContext2D();
+
+        Button button = new Button();
+        button.setVisible(false);
+
         Group root = new Group();
-        root.getChildren().add(canvas);
+        root.getChildren().addAll(canvas, button);
 
         timer = new AnimationTimer() {
             private long lastUpdate = 0;
@@ -53,10 +58,11 @@ public class Main extends Application {
             public void handle(long now) {
                 if (now - lastUpdate >= delay * 1000000L) {
                     gc.clearRect(0, 0, WIDTH, HEIGHT);
-                    move();
                     checkForApple();
+                    move();
                     intersects();
-                    draw(gc);
+                    changeDelay();
+                    draw(gc, button);
                     lastUpdate = now;
                 }
             }
@@ -65,10 +71,15 @@ public class Main extends Application {
         Scene scene = new Scene(root, Color.BLACK);
         update(scene);
 
-        stage.setResizable(false);
         stage.setTitle("Snake");
         stage.setScene(scene);
         stage.show();
+    }
+
+    private void changeDelay() {
+        if(score == 5) {
+            delay -= 5;
+        }
     }
 
     private void update(Scene scene) {
@@ -108,16 +119,16 @@ public class Main extends Application {
 
         switch (direction) {
             case UP:
-                y[0] = y[0] - UNIT_SIZE;
+                y[0] -= UNIT_SIZE;
                 break;
             case DOWN:
-                y[0] = y[0] + UNIT_SIZE;
+                y[0] += UNIT_SIZE;
                 break;
             case LEFT:
-                x[0] = x[0] - UNIT_SIZE;
+                x[0] -= UNIT_SIZE;
                 break;
             case RIGHT:
-                x[0] = x[0] + UNIT_SIZE;
+                x[0] += UNIT_SIZE;
                 break;
         }
     }
@@ -138,21 +149,8 @@ public class Main extends Application {
             }
         }
 
-        if(x[0] < 0) {
-            x[0] = WIDTH;
-        }
-
-        if(y[0] < 0){
-            y[0] = HEIGHT;
-        }
-
-        if(x[0] > WIDTH) {
-            x[0] = 0;
-        }
-
-        if(y[0] > HEIGHT) {
-            y[0] = 0;
-        }
+        x[0] = (x[0] + WIDTH) % WIDTH;
+        y[0] = (y[0] + HEIGHT) % HEIGHT;
 
         if (!isRunning) {
             timer.stop();
@@ -164,14 +162,15 @@ public class Main extends Application {
         appleY = random.nextInt(HEIGHT / UNIT_SIZE) * UNIT_SIZE;
     }
 
-    private void draw(GraphicsContext gc) {
+    private void draw(GraphicsContext gc, Button button) {
         if (isRunning) {
             drawGrid(gc);
             drawApple(gc);
             drawSnake(gc);
             drawScore(gc);
+            drawDelay(gc);
         } else {
-            drawGameOverMenu(gc);
+            drawGameOverMenu(gc, button);
         }
 
     }
@@ -199,11 +198,11 @@ public class Main extends Application {
     private void drawSnake(GraphicsContext gc) {
         for (int i = 0; i < bodyParts; i++) {
             if (i == 0) {
-                gc.setFill(Color.rgb(147 , 112 , 219));
+                gc.setFill(Color.rgb(147, 112, 219));
             } else {
-                gc.setFill(Color.rgb(138 , 43 ,226));
+                gc.setFill(Color.rgb(138, 43, 226));
             }
-            gc.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE );
+            gc.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
         }
     }
 
@@ -212,9 +211,46 @@ public class Main extends Application {
         gc.fillOval(appleX, appleY, UNIT_SIZE, UNIT_SIZE);
     }
 
-    private void drawGameOverMenu(GraphicsContext gc) {
-        gc.setFill(Color.CADETBLUE);
+    private void drawGameOverMenu(GraphicsContext gc, Button button) {
+        highScore = score;
+
+        gc.setFill(Color.rgb(253, 103, 58));
         gc.setFont(Font.font("ArcadeClassic", 100));
         gc.fillText("Game Over", 75, (double) HEIGHT / 2);
+
+        gc.setFont(Font.font("ArcadeClassic" , 50));
+        gc.fillText("HIGH SCORE: " + highScore , 160, (double) HEIGHT / 2 + 30);
+
+        callRestartButton(button);
+    }
+
+    private void callRestartButton(Button button) {
+        setUpButton(button);
+
+        button.setOnAction(e -> {
+            restart();
+            button.setVisible(false);
+
+        });
+
+    }
+
+    private void restart() {
+        isRunning = true;
+        bodyParts = 4;
+        score = 0;
+        x = new int[GAME_UNITS];
+        y = new int[GAME_UNITS];
+        direction = Direction.RIGHT;
+        timer.start();
+    }
+
+    private void setUpButton(Button button) {
+        button.setVisible(true);
+        button.setLayoutX(180);
+        button.setLayoutY((double) HEIGHT / 2+ 7);
+        button.setText("RESTART");
+        button.setStyle("-fx-background-color: rgba(0 , 0 , 0 ,0 ); -fx-text-fill: rgb(223, 255, 0);");
+        button.setFont(Font.font("ArcadeClassic" , 50));
     }
 }
